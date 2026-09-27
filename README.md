@@ -1,5 +1,7 @@
 # Post-Mortem Intelligence
 
+[![tests](https://github.com/akashhalgekar/postmortem-intelligence/actions/workflows/tests.yml/badge.svg)](https://github.com/akashhalgekar/postmortem-intelligence/actions/workflows/tests.yml)
+
 **Teams write a post-mortem after every failure, then almost never read it again. So the same failure gets relearned at full cost.**
 
 This tool turns a library of past post-mortems into decision support. You describe a new issue in plain language. The system finds the most similar past incidents and writes a short, manager-ready brief covering risks, likely root causes, recommended actions and KPIs to watch. The brief uses **only** the retrieved incidents as evidence, and every point cites the incident it came from.
@@ -14,27 +16,18 @@ It ships with a sample library of 36 supply chain, manufacturing, logistics, IT 
 ## How it works
 
 ```mermaid
-flowchart LR
-  subgraph Offline["Offline: ingestion and indexing"]
-    A1[Post-mortems<br/>CSV / XLSX / JSON / Markdown] --> A2[Column mapping<br/>to standard fields]
-    A2 --> A3[Combine key fields<br/>into doc text]
-    A3 --> A4[SentenceTransformer<br/>all-MiniLM-L6-v2]
-    A4 --> A5[(FAISS IndexFlatIP<br/>cosine similarity)]
-  end
-  subgraph Live["Live: retrieval augmented generation"]
-    B1[Gradio UI / CLI] --> B2[New issue]
-    B2 --> B3{Cache hit?}
-    B3 -- yes --> B9
-    B3 -- no --> B4[Embed query]
-    B4 --> B5[Top k search<br/>+ similarity floor]
-    B5 -- nothing similar --> R[Refuse: no evidence]
-    B5 --> B6[Evidence builder]
-    B6 --> B7[Prompt: evidence only,<br/>cite IDs, JSON out]
-    B7 --> B8[Groq LLM]
-    B8 --> V[Citation validator]
-    V --> B9[Manager-ready brief]
-  end
+flowchart TD
+  A1["Past post-mortems<br/>(CSV, Excel, JSON, Markdown)"] --> A2["Map your columns<br/>to standard fields"]
+  A2 --> A3["Embed each incident<br/>(SentenceTransformer)"]
+  A3 --> A5[("FAISS index<br/>saved to disk")]
+  B1["New issue typed in<br/>Gradio app or CLI"] --> B3{"Asked before?"}
+  B3 -- "yes" --> B9
+  B3 -- "no" --> B5["Find most similar<br/>past incidents"]
   A5 -.-> B5
+  B5 -- "nothing similar" --> R["Refuse: no evidence"]
+  B5 -- "matches found" --> B8["LLM writes brief<br/>from evidence only (Groq)"]
+  B8 --> V["Citation check:<br/>drop uncited points"]
+  V --> B9["Manager-ready brief<br/>risks, causes, actions, KPIs"]
 ```
 
 | Step | What happens | Where |
