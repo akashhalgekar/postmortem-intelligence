@@ -1,0 +1,34 @@
+Corpus: 36 post-mortems | 25 labelled queries | k=4
+Embedding model: sentence-transformers/all-MiniLM-L6-v2
+
+metric        embeddings    TF-IDF
+recall@4           0.833     0.787
+hit@1              0.920     0.840
+MRR                0.947     0.881
+
+Top-1 similarity, on-topic queries : min 0.352  median 0.504
+Top-1 similarity, off-topic queries: max 0.123  median 0.080
+Configured floor (min_similarity)  : 0.30
+  on-topic queries kept   : 25/25
+  off-topic queries refused: 6/6
+
+Evidence passed to the brief (floor 0.3, margin 0.15):
+  precision 0.633  recall 0.773  avg incidents 2.40
+
+Per-query misses (relevant incidents not in top k):
+  - Our only vendor for a critical sensor just had a flood at their factor...
+      missed ['PM-001', 'PM-002', 'PM-003'], got ['PM-025', 'PM-022', 'PM-016', 'PM-028']
+  - We plan to switch ERP next month and data migration testing is behind ...
+      missed ['PM-010'], got ['PM-008', 'PM-009', 'PM-018', 'PM-022']
+  - Leadership wants the new warehouse software live before Black Friday...
+      missed ['PM-008'], got ['PM-009', 'PM-017', 'PM-026', 'PM-029']
+  - The mold for a launch part is behind and the customer approval submiss...
+      missed ['PM-014'], got ['PM-012', 'PM-017', 'PM-013', 'PM-019']
+  - Customer sent a drawing revision right before our production part appr...
+      missed ['PM-012'], got ['PM-035', 'PM-013', 'PM-025', 'PM-023']
+  - Sales is running a big discount with a retailer next month and plannin...
+      missed ['PM-027'], got ['PM-015', 'PM-017', 'PM-016', 'PM-031']
+  - Vaccine shipment sat on a hot runway during a layover...
+      missed ['PM-029'], got ['PM-028', 'PM-005', 'PM-008', 'PM-032']
+  - We are about to award a large new program to a supplier that just won ...
+      missed ['PM-012'], got ['PM-036', 'PM-003', 'PM-001', 'PM-002']
