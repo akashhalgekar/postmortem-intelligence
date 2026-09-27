@@ -1,0 +1,53 @@
+# Retrieval evaluation set. Labels were written BEFORE running the retriever.
+# Each query describes a new issue in different words from the post-mortems;
+# `relevant` lists the past incidents a good analyst would want surfaced.
+- query: "Our only vendor for a critical sensor just had a flood at their factory and we have about a week of stock left"
+  relevant: [PM-001, PM-002, PM-003]
+- query: "The plastic raw material we buy is on allocation because the chemical plant upstream declared force majeure"
+  relevant: [PM-002, PM-030]
+- query: "A small supplier asked us for prepayment and their deliveries have been slipping for two months"
+  relevant: [PM-003]
+- query: "Ships are waiting offshore for a berth and our imported castings will arrive weeks late"
+  relevant: [PM-004, PM-005]
+- query: "Holiday merchandise is stuck at a transshipment port and the sale event starts in ten days"
+  relevant: [PM-005, PM-004]
+- query: "Customs is holding our import because the HS code on the invoice looks wrong"
+  relevant: [PM-006]
+- query: "We are about to pick an overseas supplier because their unit price is much cheaper than the local one"
+  relevant: [PM-007]
+- query: "We plan to switch ERP next month and data migration testing is behind schedule"
+  relevant: [PM-008, PM-009, PM-010]
+- query: "Leadership wants the new warehouse software live before Black Friday"
+  relevant: [PM-009, PM-008]
+- query: "Planners keep their own spreadsheets because the lead times in SAP are wrong"
+  relevant: [PM-011]
+- query: "The mold for a launch part is behind and the customer approval submission is due soon"
+  relevant: [PM-012, PM-014, PM-013]
+- query: "Customer sent a drawing revision right before our production part approval samples"
+  relevant: [PM-013, PM-012]
+- query: "Sales is running a big discount with a retailer next month and planning has not heard about it"
+  relevant: [PM-015, PM-027]
+- query: "Distributors doubled orders after a short spike and now we fear too much inventory"
+  relevant: [PM-016, PM-017]
+- query: "Marketing insists a brand new product will sell 100k units in its first quarter"
+  relevant: [PM-017]
+- query: "Stakeholders keep adding features to our automation project and the budget is growing"
+  relevant: [PM-018, PM-019]
+- query: "The one developer who knows the legacy integration code is leaving next month"
+  relevant: [PM-020]
+- query: "Two IT contractors are building different halves of an interface and nobody owns end to end testing"
+  relevant: [PM-021, PM-019]
+- query: "Customer found wrong parts in a correctly labeled box on their line"
+  relevant: [PM-023, PM-035]
+- query: "A supplier quietly changed their coating process and we are seeing rust complaints"
+  relevant: [PM-025]
+- query: "Vaccine shipment sat on a hot runway during a layover"
+  relevant: [PM-028, PM-029]
+- query: "Molder says steel and resin costs went up and they will stop shipping unless we raise the price"
+  relevant: [PM-030, PM-002]
+- query: "Our 3PL got hacked and we cannot see any shipment status"
+  relevant: [PM-032]
+- query: "System says we have stock but the bin is empty"
+  relevant: [PM-034]
+- query: "We are about to award a large new program to a supplier that just won another big contract"
+  relevant: [PM-036, PM-012]
