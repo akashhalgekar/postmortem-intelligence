@@ -1,0 +1,56 @@
+# Post-Mortem Intelligence configuration.
+# To use your own records, point `data.path` at your file and edit the
+# column mapping so each standard field points at the column name in YOUR file.
+
+data:
+  # CSV, XLSX, JSON, JSONL, or a folder of .md / .txt files (one post-mortem per file)
+  path: data/sample_postmortems.csv
+
+  # Standard field  ->  column name in your file.
+  # Only `id` and at least one text field are required. Leave a field blank ("")
+  # if your data does not have it.
+  columns:
+    id: incident_id
+    title: title
+    date: date
+    domain: domain
+    category: category
+    severity: severity
+    description: description
+    root_cause: root_cause
+    contributing_factors: contributing_factors
+    actions_taken: actions_taken
+    outcome: outcome
+    lessons_learned: lessons_learned
+    kpis_impacted: kpis_impacted
+
+  # Which standard fields are combined into the text that gets embedded.
+  embed_fields: [title, category, description, root_cause, contributing_factors, lessons_learned]
+
+retrieval:
+  # Default: all-MiniLM-L6-v2 (384 dims, runs on CPU). Any SentenceTransformers model name works.
+  embedding_model: sentence-transformers/all-MiniLM-L6-v2
+  top_k: 4
+  # Cosine similarity floor. Matches below this are not treated as evidence.
+  # Chosen from eval/run_eval.py with the default model (on-topic best matches scored
+  # 0.352 and up, off-topic questions 0.123 or lower). Re-check if you change models.
+  min_similarity: 0.30
+  # Keep only matches within this distance of the best match (drops loosely related
+  # incidents). On the eval set 0.15 raised evidence precision from 0.41 to 0.63
+  # while recall went from 0.83 to 0.77. Set to null to disable.
+  relative_margin: 0.15
+  # Briefs whose best match scores below this get a "weak match" warning.
+  weak_match_below: 0.40
+
+llm:
+  provider: groq
+  # Any Groq chat model ID. Check https://console.groq.com/docs/models for current IDs.
+  model: openai/gpt-oss-120b
+  temperature: 0.1
+  # Read from this environment variable. Without a key, the app falls back to
+  # an extractive brief built directly from the retrieved records (no generation).
+  api_key_env: GROQ_API_KEY
+
+storage:
+  index_dir: .pmi/index
+  cache_path: .pmi/cache.sqlite

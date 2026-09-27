@@ -1,0 +1,11 @@
+# Versions below are the ones the test suite was run against.
+sentence-transformers>=6.1
+faiss-cpu>=1.15
+gradio>=6.0
+groq>=1.7
+pandas>=2.2
+numpy>=1.26
+PyYAML>=6.0
+openpyxl>=3.1
+scikit-learn>=1.5   # only used by eval/run_eval.py for the keyword baseline
+pytest>=8.0
