@@ -1,0 +1,402 @@
+"""Builds data/sample_postmortems.csv.
+
+Every record here is FICTIONAL. Companies, suppliers, plants and numbers are
+invented to look like real supply chain and project post-mortems so the system
+can be demonstrated end to end. Replace this file with your own records (see
+config.yaml for column mapping).
+
+Run:  python data/build_sample_data.py
+"""
+import csv
+from pathlib import Path
+
+FIELDS = [
+    "incident_id", "title", "date", "domain", "category", "severity",
+    "description", "root_cause", "contributing_factors", "actions_taken",
+    "outcome", "lessons_learned", "kpis_impacted",
+]
+
+R = []
+
+
+def add(*vals):
+    assert len(vals) == len(FIELDS), (vals[0], len(vals))
+    R.append(dict(zip(FIELDS, vals)))
+
+
+# ---------------------------------------------------------------- single source
+add("PM-001", "Sole source connector supplier fire halts harness line",
+    "2023-03-14", "Supply Chain", "Supplier Disruption", "High",
+    "A fire at the only approved supplier of a sealed 12 pin connector stopped their molding cell. Our wire harness line ran out of connectors after 4 days and stopped for 9 working days.",
+    "The connector was single sourced with no qualified alternate. The sourcing decision five years earlier was made on piece price only and never revisited.",
+    "No supplier risk review since award; safety stock set at 3 days; supplier's business continuity plan was never requested.",
+    "Air freighted partial stock from supplier's second plant abroad; expedited PPAP for an alternate supplier in 6 weeks; allocated scarce connectors to highest margin programs.",
+    "9 days of line downtime, 1,800 vehicles delayed at the customer, about $410K in premium freight and overtime.",
+    "Any part that can stop a line needs a qualified second source or a documented, funded risk acceptance. Ask for supplier continuity plans at award, not after a failure.",
+    "Line uptime; OTD to customer; premium freight spend")
+
+add("PM-002", "Single source resin grade on allocation during force majeure",
+    "2021-02-22", "Supply Chain", "Supplier Disruption", "High",
+    "A petrochemical producer declared force majeure after a winter storm. Our specified polypropylene grade came from that producer only, and the molder was put on 40 percent allocation for 7 weeks.",
+    "Engineering drawings called out one branded resin grade instead of a performance specification, so no alternate grade could be used without full revalidation.",
+    "Drawing ownership sat with customer engineering; revalidation lead time of 8 weeks; no visibility into tier 3 raw material sources.",
+    "Worked with customer engineering to approve two equivalent grades under a temporary deviation; prioritized builds by customer penalty exposure.",
+    "Shipments fell to 60 percent of demand for 5 weeks; two customer line stops avoided by daily allocation calls.",
+    "Specify materials by performance, pre-approve alternate grades during development, and map critical sub tier sources before launch.",
+    "Fill rate; customer line stop risk; material cost")
+
+add("PM-003", "Sole supplier for custom PCB goes out of business",
+    "2022-09-05", "Supply Chain", "Supplier Financial Distress", "High",
+    "The only supplier of a custom control board filed for insolvency with two weeks notice. Tooling and test fixtures were at their site.",
+    "Supplier financial health was never monitored and the board was single sourced. Ownership of test fixtures was not written into the contract.",
+    "Payment terms had been stretched to 90 days which worsened supplier cash flow; late deliveries in the prior two quarters were not escalated.",
+    "Legal recovered fixtures after a court order; last time buy of 6 months of boards; transferred build to a new EMS supplier.",
+    "Recovery took 11 weeks and cost about $260K including new fixtures and requalification.",
+    "Watch leading indicators of distress such as slipping delivery, requests for prepayment and staff turnover. Contracts must state ownership of customer funded tooling.",
+    "Supply continuity; cost of requalification")
+
+# ---------------------------------------------------------------- ocean freight
+add("PM-004", "Port congestion delays inbound containers by three weeks",
+    "2021-08-19", "Logistics", "Transportation Delay", "Medium",
+    "Twelve containers of imported fasteners and castings sat at anchor outside a congested West Coast port for 19 days beyond the planned arrival.",
+    "Inbound planning used a fixed 35 day ocean lead time and did not adjust when port dwell times rose across the industry.",
+    "No live vessel tracking; single port of entry; buffers sized on average lead time instead of lead time variability.",
+    "Rerouted two later bookings to a Gulf port; air freighted the highest risk castings; raised lead time assumption to 50 days for the season.",
+    "Three short production stops and $180K of air freight.",
+    "Plan with lead time variability, not the average. Track dwell time at ports as a leading indicator and keep an alternate port routing ready.",
+    "Inbound lead time; premium freight; production attainment")
+
+add("PM-005", "Container rollover at transshipment hub misses launch window",
+    "2022-04-11", "Logistics", "Transportation Delay", "Medium",
+    "Seasonal merchandise was rolled twice at a transshipment hub because the carrier overbooked. Product arrived 16 days after the promotion start date.",
+    "The booking was made with a low cost carrier with poor schedule reliability and no priority service, and the shipment had no margin before the promotion date.",
+    "Promotion date was fixed before logistics lead time was confirmed; forwarder did not warn about rollover risk.",
+    "Sold the late stock at a markdown; added schedule reliability to carrier selection scoring.",
+    "Lost about 30 percent of planned promotion sales; markdown cost of $95K.",
+    "For date critical goods, pay for reliability and build schedule buffer in front of the fixed date. Promotion dates should be locked only after supply lead time is confirmed.",
+    "Promotion sell through; markdown cost; carrier schedule reliability")
+
+add("PM-006", "Customs hold from wrong tariff classification",
+    "2023-06-02", "Logistics", "Customs & Trade Compliance", "Medium",
+    "A shipment of electric motors was held by customs for 12 days because the commercial invoice used a tariff code that did not match the product description.",
+    "Tariff classification was copied from an older part number by the supplier. There was no internal review of HTS codes for new parts.",
+    "New part introduced during a busy launch; broker flagged a mismatch but the email went to a shared inbox nobody watched.",
+    "Filed corrected entry; paid additional duty and storage; created a classification review step in the new part setup workflow.",
+    "12 day delay, $22K in storage and demurrage, and a duty adjustment.",
+    "Classify new parts internally before first shipment and route broker alerts to a named owner, not a shared inbox.",
+    "Customs clearance time; landed cost")
+
+add("PM-007", "Duty cost underestimated in import vs domestic sourcing decision",
+    "2023-01-20", "Supply Chain", "Customs & Trade Compliance", "Low",
+    "An imported bracket was chosen over a domestic source because piece price was 18 percent lower. After six months landed cost was 7 percent higher than the domestic quote.",
+    "The sourcing comparison used piece price plus freight only. Duty, brokerage, inventory carrying cost of the longer pipeline and currency movement were left out.",
+    "Template used by buyers had no landed cost fields; currency moved against us after award.",
+    "Built a total landed cost template and resourced the bracket domestically at next contract renewal.",
+    "About $70K of avoidable annual cost before the part was resourced.",
+    "Compare suppliers on total landed cost including duty, freight, carrying cost and currency risk, not piece price.",
+    "Landed cost; purchase price variance")
+
+# ---------------------------------------------------------------- ERP / systems
+add("PM-008", "ERP go live posts wrong unit of measure and stops shipping",
+    "2020-11-02", "IT & Systems", "System Cutover", "High",
+    "After the ERP cutover, about 400 items were loaded with each as the unit of measure instead of case of 12. Orders shipped short and the warehouse froze shipments for three days.",
+    "Master data migration was validated by record count only. Nobody compared converted quantities against the legacy system for high volume items.",
+    "Cutover moved forward two weeks to meet fiscal year end; mock conversions skipped the last dress rehearsal; business users were not part of data sign off.",
+    "Rolled back unit of measure for affected items, manually reviewed open orders, issued customer credits.",
+    "Three days of shipping stopped, $300K in credits and expedites, damaged trust with two key accounts.",
+    "Validate migrated master data by business meaning, not row counts, and have the business owners sign it off. Do not cut the final dress rehearsal to hit a date.",
+    "Order fill rate; customer credits; days sales outstanding")
+
+add("PM-009", "Warehouse management system cutover during peak season",
+    "2021-10-18", "IT & Systems", "System Cutover", "High",
+    "A new warehouse management system went live six weeks before peak. Pick rates dropped 40 percent and backlog reached five days.",
+    "Go live timing was driven by the vendor's contract milestone rather than the operation's seasonality. Staff training happened two weeks before go live and was not hands on.",
+    "Label printer integration untested at full volume; hypercare team released after one week.",
+    "Brought back temporary labor, extended hypercare, ran the old system for returns only.",
+    "Backlog of five days during peak, estimated $1.1M in lost and delayed revenue.",
+    "Never go live on a core operational system close to peak. Test at peak volume, train hands on, and keep hypercare until KPIs recover.",
+    "Pick rate; order backlog; on time ship")
+
+add("PM-010", "Duplicate supplier records cause double payments",
+    "2022-05-09", "IT & Systems", "Master Data Quality", "Medium",
+    "An audit found 57 suppliers set up twice in the ERP with slightly different names. Eleven invoices were paid twice.",
+    "Supplier master creation had no duplicate check on tax ID or bank account. Several plants created suppliers locally.",
+    "No central master data owner; onboarding form was a free text email.",
+    "Recovered duplicate payments; merged records; centralized supplier creation with a tax ID and bank account match check.",
+    "$146K paid twice, $131K recovered.",
+    "Give master data one owner and enforce duplicate checks at creation, not in later audits.",
+    "Duplicate payment rate; master data accuracy")
+
+add("PM-011", "Wrong lead times in planning system cause shortages",
+    "2023-09-12", "Supply Chain", "Master Data Quality", "Medium",
+    "Material planning released purchase orders too late for 60 parts because their lead times in the system were 2 to 6 weeks shorter than reality.",
+    "Planned lead times had not been updated since initial setup, while supplier actual lead times had grown.",
+    "No report comparing planned and actual lead times; buyers kept real lead times in personal spreadsheets.",
+    "Built a monthly planned vs actual lead time report; updated 60 parts; added lead time review to quarterly business reviews.",
+    "14 shortages in one quarter, 3 caused production schedule changes.",
+    "Master data that drives planning must be measured against actuals on a schedule. Spreadsheet side systems are a symptom of bad system data.",
+    "Shortages; schedule adherence; planning accuracy")
+
+# ---------------------------------------------------------------- NPI / launch
+add("PM-012", "Tooling late for new product launch, PPAP slips",
+    "2022-02-28", "Manufacturing", "New Product Introduction", "High",
+    "Injection mold tooling for a new interior trim part arrived 5 weeks late. PPAP could not be submitted in time and the customer launch was at risk.",
+    "The tool maker was selected without a capacity check and was running tools for three other launches at the same time.",
+    "Tooling kickoff delayed while price was negotiated; no weekly tooling progress reviews with photos or milestones.",
+    "Paid for a second shift at the toolmaker, ran interim parts from a soft tool, submitted interim PPAP with customer approval.",
+    "Launch held with interim approval; $85K in expedite cost; full PPAP 4 weeks late.",
+    "Confirm tool maker capacity before award and track tooling with weekly milestone reviews. Price negotiation should not hold up tool kickoff on a critical path part.",
+    "Launch readiness; PPAP on time; tooling cost")
+
+add("PM-013", "Engineering change late in launch invalidates PPAP samples",
+    "2023-04-17", "Manufacturing", "New Product Introduction", "Medium",
+    "The customer released a design change to a bracket three weeks before PPAP. Parts already run for PPAP no longer matched the drawing.",
+    "There was no design freeze date agreed with the customer and no impact assessment process for late changes.",
+    "Change came through an informal email to one engineer; purchasing did not learn about it for 10 days.",
+    "Modified the tool, re-ran samples, negotiated cost recovery for the tool change with the customer.",
+    "PPAP delayed 3 weeks; $40K tool change partly recovered.",
+    "Agree a design freeze with the customer and route every change through a formal change process that notifies purchasing, quality and suppliers the same day.",
+    "PPAP on time; engineering change cycle time")
+
+add("PM-014", "Supplier PPAP rejected for incomplete measurement study",
+    "2021-07-06", "Manufacturing", "New Product Introduction", "Medium",
+    "A supplier's PPAP for a machined housing was rejected twice because the gauge R&R study was missing and capability data used too few parts.",
+    "The supplier had never done a PPAP to our customer's requirements and nobody reviewed the package before submission.",
+    "Supplier quality engineer covering 40 suppliers; PPAP requirements sent as a 60 page document without a checklist.",
+    "Ran a PPAP workshop with the supplier, created a one page checklist, reviewed drafts before submission.",
+    "6 week delay to part approval.",
+    "Review PPAP packages internally before they reach the customer, and give first time suppliers a checklist and a pre-review.",
+    "PPAP first time approval rate")
+
+# ---------------------------------------------------------------- forecasting
+add("PM-015", "Promotion not shared with supply planning causes stockout",
+    "2022-11-25", "Supply Chain", "Demand Planning", "High",
+    "A retail customer ran a price promotion that tripled weekly demand for a beverage SKU. Supply planning found out when orders arrived and the item was out of stock for two weeks.",
+    "Promotion calendars lived with the sales team and were not an input to the demand plan.",
+    "No monthly consensus meeting between sales and supply; customer notice came 3 weeks out but was not escalated.",
+    "Started a monthly S&OP demand review with sales; added promotion flags to the forecast.",
+    "Lost about $600K in sales and paid a customer fill rate penalty.",
+    "Commercial events must be an input to the demand plan. A consensus process between sales and supply is cheaper than stockouts.",
+    "Forecast accuracy; fill rate; lost sales")
+
+add("PM-016", "Bullwhip after demand spike leads to excess inventory",
+    "2021-06-30", "Supply Chain", "Demand Planning", "Medium",
+    "After a short demand spike, planners and distributors both raised orders. Six months later we held 9 months of inventory on the affected product family.",
+    "Each tier of the chain reacted to orders rather than end customer demand, and order batching amplified the signal.",
+    "No point of sale data shared by distributors; forecast model overweighted the latest month.",
+    "Negotiated point of sale data sharing with top distributors, changed forecast smoothing, cancelled open orders where possible.",
+    "$2.3M of excess inventory, $400K written down.",
+    "Plan from end customer demand where possible and dampen reaction to one month spikes. Share sell through data across tiers.",
+    "Inventory days on hand; write downs; forecast bias")
+
+add("PM-017", "New product forecast based on sales enthusiasm overbuilds",
+    "2023-02-13", "Supply Chain", "Demand Planning", "Medium",
+    "A new product was forecast at 50,000 units in the first quarter based on sales input. Actual sales were 14,000 and the rest aged in the warehouse.",
+    "No analog products or market test data were used to challenge the forecast, and the full quantity was committed in one buy.",
+    "Supplier minimum order quantity encouraged a large initial buy; no stage gate review of the launch forecast.",
+    "Moved to phased buys with review points; used analog products for new product forecasts.",
+    "$780K in excess stock, partly sold through a discount channel.",
+    "Challenge launch forecasts with analogs and stage the buys so commitment grows with evidence.",
+    "Forecast accuracy; excess and obsolete inventory")
+
+# ---------------------------------------------------------------- scope / PM
+add("PM-018", "Scope creep on warehouse automation project",
+    "2022-08-01", "Project Management", "Scope Management", "High",
+    "A conveyor and sortation project grew from 3 to 7 sort destinations during design as stakeholders added requests. Cost rose 45 percent and go live slipped 5 months.",
+    "There was no change control board and requirements were never baselined and signed.",
+    "Sponsor changed midway; vendor was paid time and materials for design which rewarded changes.",
+    "Set up a change control board, re-baselined scope, moved extra destinations to phase two.",
+    "Budget overrun of $1.9M and 5 month delay.",
+    "Baseline and sign requirements before design, and route every change through a change board with a cost and schedule impact.",
+    "Budget variance; schedule variance")
+
+add("PM-019", "Unclear requirements lead to rework in supplier portal project",
+    "2021-03-15", "Project Management", "Scope Management", "Medium",
+    "A supplier portal was built to IT's understanding of requirements. At user testing buyers rejected half the screens because approval workflows did not match how purchasing works.",
+    "Buyers and suppliers were not involved until user testing; requirements were written by IT from old documents.",
+    "Agile sprints ran without a product owner from the business; demos went only to IT management.",
+    "Named a purchasing product owner, redid workflows, held biweekly demos with buyers.",
+    "4 months of rework and a lower adoption rate at launch.",
+    "Put a business product owner on the team from day one and demo to real users every sprint.",
+    "Rework hours; user adoption rate")
+
+add("PM-020", "Key engineer leaves and project stalls",
+    "2022-10-10", "Project Management", "Resource & Knowledge Risk", "Medium",
+    "The only engineer who understood the PLC logic for a packaging line retrofit resigned mid project. The team spent 7 weeks reverse engineering the code.",
+    "Knowledge was held by one person with no documentation and no backup.",
+    "Documentation was deferred to the end of the project; heavy workload prevented pairing.",
+    "Hired a contractor, required code documentation at each milestone, paired engineers on critical systems.",
+    "7 week slip and $120K in contractor cost.",
+    "Treat single person knowledge as a project risk. Document as you go and pair people on critical systems.",
+    "Schedule variance; key person risk count")
+
+add("PM-021", "Vendor handoff gap during system integration",
+    "2023-05-22", "Project Management", "Vendor Management", "Medium",
+    "Two vendors built separate parts of a transport management integration. Each assumed the other owned error handling, and failed messages were silently dropped for 3 weeks.",
+    "The statement of work did not define interface ownership, and no end to end test was run across both vendors.",
+    "Weekly meetings held separately with each vendor; no single integration lead.",
+    "Named an integration lead, wrote an interface control document, ran end to end tests with both vendors.",
+    "About 900 shipment updates lost, customer service workload doubled for a month.",
+    "When more than one vendor touches a flow, name one owner for the end to end interface and test it end to end.",
+    "Message error rate; customer inquiries")
+
+add("PM-022", "Optimistic schedule without buffer for new plant commissioning",
+    "2020-06-15", "Project Management", "Schedule Management", "High",
+    "A new plant schedule assumed every equipment vendor delivered on time and commissioning passed first time. Start of production slipped 4 months.",
+    "The schedule had no contingency and the critical path ran through three long lead equipment items with no float.",
+    "Leadership had announced the date publicly before the plan was built; risk register was not used to set buffers.",
+    "Rebaselined with schedule contingency on the critical path; weekly critical path reviews with vendors.",
+    "4 month delay, $3.5M in carrying costs and lost margin.",
+    "Build buffers from the risk register, protect the critical path, and do not announce dates before the plan exists.",
+    "Schedule variance; start of production date")
+
+# ---------------------------------------------------------------- quality
+add("PM-023", "Quality escape of mislabeled parts reaches customer",
+    "2022-07-19", "Manufacturing", "Quality Escape", "High",
+    "Left and right hand mirror brackets were packed in the wrong labeled boxes. The customer found them on the assembly line and stopped for 2 hours.",
+    "Both parts looked almost identical and ran on the same line. There was no error proofing at pack out.",
+    "Label printed at start of shift rather than at the point of pack; new operator on the line.",
+    "Sorted all stock at our plant and the customer, added a vision check at pack out, changed part color coding.",
+    "Customer line stop, $48K in sort and chargeback costs, a formal 8D requested.",
+    "Error proof look alike parts at the point of pack, and do not depend on inspection or operator attention.",
+    "Customer PPM; line stop incidents")
+
+add("PM-024", "Incoming inspection skipped, bad resin lot causes scrap",
+    "2021-12-06", "Manufacturing", "Quality Escape", "Medium",
+    "A resin lot with high moisture content was used without testing. Parts showed splay marks and 18,000 parts were scrapped over two shifts.",
+    "Incoming inspection had been reduced to certificates only for this supplier, and the certificate did not include moisture.",
+    "Dryer alarm had been disabled due to nuisance alarms; supplier changed their packaging.",
+    "Reinstated moisture testing, fixed dryer alarm settings, required moisture on certificates.",
+    "$36K scrap and a 2 day delay to one customer.",
+    "Reduced inspection only works if the certificate covers the failure modes that matter. Nuisance alarms should be fixed, not disabled.",
+    "Scrap rate; first pass yield")
+
+add("PM-025", "Supplier process change without notice causes field failures",
+    "2023-08-28", "Manufacturing", "Quality Escape", "High",
+    "A supplier changed the plating chemistry on a fastener without telling us. Corrosion showed up in the field after 5 months.",
+    "The supply agreement required change notification but it was never audited or enforced.",
+    "Supplier's sub tier plating vendor changed; our supplier did not know either.",
+    "Containment and field replacement, supplier audit, sub tier change notification added to the quality agreement.",
+    "Field campaign of $520K.",
+    "Audit that suppliers follow change notification, including their own sub tier suppliers. Periodic requalification catches silent changes.",
+    "Warranty cost; field failure rate")
+
+# ---------------------------------------------------------------- warehouse / capacity
+add("PM-026", "Warehouse runs out of space during pre-build",
+    "2022-09-26", "Logistics", "Capacity Planning", "Medium",
+    "A pre-build ahead of a plant shutdown filled the warehouse to 104 percent. Trucks waited up to 6 hours and overflow storage was rented at short notice.",
+    "The pre-build plan was made in production planning without a storage capacity check.",
+    "No shared capacity view between production and logistics; inbound receipts were not rescheduled.",
+    "Rented overflow trailers, shifted inbound deliveries, added a warehouse capacity check to pre-build planning.",
+    "$75K in overflow storage and detention charges.",
+    "Check downstream storage and handling capacity whenever you plan a pre-build or inventory build.",
+    "Warehouse utilization; detention cost")
+
+add("PM-027", "Carrier capacity shortage at quarter end",
+    "2021-09-30", "Logistics", "Capacity Planning", "Medium",
+    "At quarter end the company tried to ship 40 percent of the quarter's volume in the last 2 weeks. Contracted carriers rejected loads and spot rates were paid.",
+    "Sales incentives drove a quarter end hockey stick; transport was not told the volume profile.",
+    "Carrier contracts had no committed capacity for surge weeks.",
+    "Shared forecasted weekly volume with carriers; negotiated surge capacity; worked with sales on smoothing.",
+    "$210K in spot premiums, 8 percent of orders shipped late.",
+    "Share the volume profile with transport partners in advance and address the incentives that create end of period spikes.",
+    "Freight cost per unit; on time ship")
+
+# ---------------------------------------------------------------- cold chain / pharma
+add("PM-028", "Temperature excursion in cold chain shipment",
+    "2022-03-08", "Logistics", "Cold Chain", "High",
+    "A shipment of temperature sensitive product was left on a hot tarmac during a flight connection. The data logger showed 4 hours above limit and the lot was destroyed.",
+    "The lane had a connection at a hub without cold storage. The lane was not qualified for summer conditions.",
+    "Passive packaging validated for 48 hours, but the route took 56 hours; no real time temperature alerts.",
+    "Requalified the lane, switched to direct flight, added real time loggers with alerts.",
+    "$310K product loss and supply gap for 3 weeks.",
+    "Qualify cold chain lanes for worst case season and route, and use real time alerts so there is time to intervene.",
+    "Temperature excursion rate; product loss")
+
+add("PM-029", "Freezer failure at third party warehouse",
+    "2023-07-03", "Logistics", "Cold Chain", "Medium",
+    "A freezer at a third party warehouse failed over a holiday weekend. The alarm went to a phone that was switched off.",
+    "Alarm escalation had one contact and no backup, and the provider's weekend coverage was never audited.",
+    "Contract did not specify alarm response time.",
+    "Added escalation tree with three contacts, audited weekend coverage, added response time to contract.",
+    "$90K of product lost.",
+    "Alarms need an escalation tree and an audited response time, especially on holidays.",
+    "Product loss; provider compliance")
+
+# ---------------------------------------------------------------- cost / contracts
+add("PM-030", "Fixed price contract without index clause during resin spike",
+    "2021-05-17", "Supply Chain", "Contract & Pricing", "Medium",
+    "A molder demanded a 22 percent price increase mid contract after resin prices rose sharply, and threatened to stop shipping.",
+    "The contract fixed price for 2 years with no raw material index, so all commodity risk sat with the supplier until it became unbearable.",
+    "Buyer had pushed for fixed prices to hit an annual savings target.",
+    "Negotiated an index linked price with quarterly adjustments in both directions.",
+    "Paid $140K more than budget for the year, but avoided a supply stop.",
+    "Tie commodity heavy parts to a published index that moves in both directions. Fixed prices that bankrupt a supplier are not savings.",
+    "Purchase price variance; supply continuity")
+
+add("PM-031", "Savings claimed but not realized after supplier change",
+    "2022-12-12", "Supply Chain", "Contract & Pricing", "Low",
+    "A sourcing event claimed 12 percent savings on packaging. Finance found no change in cost per unit a year later.",
+    "The new price excluded freight and a minimum order surcharge that the old supplier had included, and volumes shifted to higher cost sizes.",
+    "Savings were measured on quote price, not on paid invoices.",
+    "Changed savings reporting to use invoice data and like for like baskets.",
+    "Reported savings of $180K were not real.",
+    "Measure savings from invoice data on a like for like basis, and include all cost elements in quote comparisons.",
+    "Realized savings; cost per unit")
+
+# ---------------------------------------------------------------- cyber / misc
+add("PM-032", "Ransomware at logistics provider stops order visibility",
+    "2023-10-23", "IT & Systems", "Third Party Cyber Risk", "High",
+    "Our logistics provider was hit by ransomware. For 9 days we had no shipment status, and orders were tracked with phone calls and spreadsheets.",
+    "There was no manual fallback process and no requirement for the provider to have tested recovery plans.",
+    "Security questionnaire at onboarding was not reviewed again; integration had no alternate data path.",
+    "Built a manual fallback runbook, added cyber recovery requirements and annual testing to contracts.",
+    "9 days without visibility, customer service backlog of 1,400 inquiries.",
+    "Assume a critical provider's systems can go down. Keep a tested manual fallback and require recovery testing in contracts.",
+    "Order visibility; customer inquiries")
+
+add("PM-033", "Supplier on credit hold after missed payments from our side",
+    "2022-01-24", "Supply Chain", "Supplier Relationship", "Medium",
+    "A key supplier put us on credit hold because invoices had been unpaid for 75 days due to purchase order and receipt mismatches.",
+    "Three way match failures were not worked by anyone. Invoices waited in an exception queue.",
+    "Receiving posted partial receipts incorrectly; exception queue had no owner or aging report.",
+    "Cleared the backlog, assigned an owner for the exception queue with a weekly aging report.",
+    "5 days of held shipments and loss of early payment discount.",
+    "Invoice exceptions need an owner and an aging report. Supplier relationships are hurt by our own process failures.",
+    "Invoice exception aging; supplier satisfaction")
+
+add("PM-034", "Inventory record inaccuracy leads to phantom stock",
+    "2023-03-27", "Supply Chain", "Inventory Accuracy", "Medium",
+    "The system showed 2,000 units of a component in stock, but the shelf was empty. Production started a job and stopped when parts could not be found.",
+    "Scrap was not being recorded in the system, and cycle counting had been paused for 3 months.",
+    "Cycle counters reassigned to shipping during a labor shortage.",
+    "Restarted cycle counting prioritized by value and usage, made scrap reporting part of shift close.",
+    "Two production stops and 11 hours of lost time.",
+    "Protect cycle counting when labor is tight, and make scrap and adjustments part of the standard shift routine.",
+    "Inventory record accuracy; production stops")
+
+add("PM-035", "Kitting error in line side replenishment",
+    "2021-04-12", "Manufacturing", "Material Flow", "Low",
+    "A kit for an assembly cell had the wrong revision of a gasket for two days because the kitting bill of materials was not updated after an engineering change.",
+    "The kitting list was maintained separately from the ERP bill of materials.",
+    "Engineering change notices did not list the kitting list as a document to update.",
+    "Generated kit lists from the ERP bill of materials, added kitting to the change notice checklist.",
+    "310 assemblies reworked.",
+    "Drive every downstream list from one source of truth, and include every affected document in the engineering change checklist.",
+    "Rework hours; first pass yield")
+
+add("PM-036", "Supplier capacity oversold after award",
+    "2023-11-06", "Supply Chain", "Supplier Capacity", "High",
+    "A die casting supplier won two large programs in the same quarter and could not meet either volume. Deliveries ran at 70 percent of schedule for 4 months.",
+    "The capacity assessment at award relied on the supplier's own statement and did not check their total committed load.",
+    "Two plants of ours awarded business to the same supplier independently.",
+    "Resourced one program, put a resident engineer at the supplier, introduced a capacity verification step with a load analysis at award.",
+    "4 months of shortages, $650K in premium freight and overtime.",
+    "Verify supplier capacity against their total committed load before award, and coordinate awards across plants.",
+    "Supplier OTD; premium freight")
+
+with open(Path(__file__).with_name("sample_postmortems.csv"), "w", newline="", encoding="utf-8") as f:
+    w = csv.DictWriter(f, fieldnames=FIELDS)
+    w.writeheader()
+    w.writerows(R)
+print(f"wrote {len(R)} records")
